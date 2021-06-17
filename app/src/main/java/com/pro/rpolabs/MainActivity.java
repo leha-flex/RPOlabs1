@@ -15,6 +15,8 @@ import org.apache.commons.codec.binary.Hex;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,11 +55,18 @@ public class MainActivity extends AppCompatActivity {
         }
         return new byte[0];
     }
-    protected void onButtonClick(View v) {
-        Log.e("Button click", "clicked");
-        Toast.makeText(this, "clicked!", Toast.LENGTH_SHORT).show();
+    protected void onButtonClick(View v){
+        // Toast.makeText(this, "Clicked", Toast.LENGTH_SHORT).show();
+        byte[] key = StringToHex( "0123456789ABCDEF0123456789ABCDE0");
+        byte[] key = StringToHex( "0123456789ABCDEF0123456789ABCDE0");
+        byte[] enc = encrypt(key, StringToHex( "000000000000000102"));
+
+        byte [ ] dec = decrypt (key, enc);
+        String s = new String(Hex.encodeHex(dec)).toUpperCase();
+        Toast.makeText(this, s, Toast.LENGTH_SHORT). show();
         Intent it = new Intent(this, PinpadActivity.class);
-        startActivity(it);
+        // startActivity(it);
+        startActivityForResult(it, 0);
     }
     protected void onButtonHttpClick(View v) {
         TestHttpClient();
@@ -66,8 +75,8 @@ public class MainActivity extends AppCompatActivity {
     protected void TestHttpClient() {
         new Thread(() -> {
             try {
-                HttpURLConnection uc = (HttpURLConnection) (new URL("https://www.wikipedia.org").openConnection());
-                //HttpURLConnection uc = (HttpURLConnection) (new URL("http://10.0.2.2:8081/api/v1/title").openConnection());
+                //HttpURLConnection uc = (HttpURLConnection) (new URL("https://www.wikipedia.org").openConnection());
+                HttpURLConnection uc = (HttpURLConnection) (new URL("http://10.0.2.2:8081/api/v1/title").openConnection());
                 InputStream inputStream = uc.getInputStream();
                 String html = IOUtils.toString(inputStream);
                 String title = getPageTitle(html);
@@ -82,13 +91,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected String getPageTitle(String html) {
-        int pos = html.indexOf("<title");
+        /*int pos = html.indexOf("<title");
         String p = "not found";
         if (pos >= 0) {
             int pos2 = html.indexOf("<", pos + 1);
             if (pos >= 0)
                 p = html.substring(pos + 7, pos2);
         }
+        return p;*/
+        Pattern pattern = Pattern.compile("<title>(.+?)</title>", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(html);
+        String p;
+        if (matcher.find())
+            p = matcher.group(1);
+        else
+            p = "Not found";
         return p;
     }
 
